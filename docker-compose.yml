@@ -54,7 +54,7 @@ services:
     shm_size: '1g'
 
 volumes:
-  letsencrypt:
+  traefik-public-certificates:
   db:
     driver: local
 
