@@ -31,6 +31,9 @@ services:
       - "traefik.http.routers.challenger.entrypoints=websecure"
       - "traefik.http.services.challenger.loadbalancer.server.port=80"
       - "traefik.http.routers.challenger.tls.certresolver=myresolver"
+    gpus:
+      - "0"
+    shm_size: '1g'
     volumes:
       - "./models:/data"
 
@@ -44,6 +47,8 @@ services:
       - "traefik.http.routers.challenger.rule=Host(`challenger.sybil.com`)"
       - "traefik.http.services.challenger.loadbalancer.server.port=80"
       - "traefik.http.routers.challenger.tls.certresolver=myresolver"
+    gpus:
+      - "1"
     volumes:
       - "./models:/data"
 
