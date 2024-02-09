@@ -13,19 +13,19 @@ services:
       - "traefik.http.middlewares.api-ratelimit.ratelimit.average=100"
       - "traefik.http.middlewares.api-ratelimit.ratelimit.burst=50"
 
-  db:
-      # Adjust the build context to your needs targetting the created Dockerfile
-      build:
-          context: ./redis/
-          dockerfile: Dockerfile
-      image: redis:7.2-alpine
-      restart: always
-      ports:
-          - 127.0.01:6379:6379
-      # Run the init script
-      command: sh -c "./init.sh"
-      # Run as privileged to allow the container to change the vm.overcommit_memory setting
-      privileged: true
+  # db:
+  #     # Adjust the build context to your needs targetting the created Dockerfile
+  #     build:
+  #         context: ./redis/
+  #         dockerfile: Dockerfile
+  #     image: redis:7.2-alpine
+  #     restart: always
+  #     ports:
+  #         - 127.0.0.1:6379:6379
+  #     # Run the init script
+  #     command: sh -c "./init.sh"
+  #     # Run as privileged to allow the container to change the vm.overcommit_memory setting
+  #     privileged: true
 
   traefik:
     image: traefik:v2.3
