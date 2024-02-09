@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:v2.3
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=robert@manifold.inc"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+    restart: always
+
+  inference-service1:
+    image: ghcr.io/huggingface/text-generation-inference:1.3
+    command: ["--model-id", "mlabonne/NeuralDaredevil-7B", "--max-input-length", "3072", "--max-total-tokens", "4096"]
+    ports:
+      - "8080:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.challenger.rule=Host(`challenger.sybil.com`)"
+      - "traefik.http.routers.challenger.entrypoints=websecure"
+      - "traefik.http.services.challenger.loadbalancer.server.port=80"
+      - "traefik.http.routers.challenger.tls.certresolver=myresolver"
+    volumes:
+      - "./models:/data"
+
+  inference-service2:
+    image: ghcr.io/huggingface/text-generation-inference:1.3
+    command: ["--model-id", "mlabonne/NeuralDaredevil-7B", "--max-input-length", "3072", "--max-total-tokens", "4096"]
+    ports:
+      - "8081:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.challenger.rule=Host(`challenger.sybil.com`)"
+      - "traefik.http.services.challenger.loadbalancer.server.port=80"
+      - "traefik.http.routers.challenger.tls.certresolver=myresolver"
+    volumes:
+      - "./models:/data"
+
+volumes:
+  letsencrypt:
