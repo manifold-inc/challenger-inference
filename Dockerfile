@@ -3,6 +3,7 @@ FROM opentensorfdn/bittensor:6.6.0
 
 COPY ./api /app/api
 COPY app.py /app/app.py
+COPY .env /app/.env
 
 WORKDIR /app
 
