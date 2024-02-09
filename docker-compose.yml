@@ -31,8 +31,13 @@ services:
       - "traefik.http.routers.challenger.entrypoints=websecure"
       - "traefik.http.services.challenger.loadbalancer.server.port=80"
       - "traefik.http.routers.challenger.tls.certresolver=myresolver"
-    gpus:
-      - "0"
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['0']
+            capabilities: [gpu]
     shm_size: '1g'
     volumes:
       - "./models:/data"
@@ -47,8 +52,13 @@ services:
       - "traefik.http.routers.challenger.rule=Host(`challenger.sybil.com`)"
       - "traefik.http.services.challenger.loadbalancer.server.port=80"
       - "traefik.http.routers.challenger.tls.certresolver=myresolver"
-    gpus:
-      - "1"
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['1']
+            capabilities: [gpu]
     volumes:
       - "./models:/data"
 
