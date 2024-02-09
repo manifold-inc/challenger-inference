@@ -1,66 +1,64 @@
 version: "3.8"
 
 services:
+  api:
+    build: ./
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.app-http.rule=Host(`challenger.sybil.com`)
+      - traefik.http.routers.app-http.tls=true
+      - traefik.http.routers.app-http.tls.certresolver=letsencrypt
+      - "traefik.http.routers.app-http.middlewares=api-ratelimit"
+      - "traefik.http.middlewares.api-ratelimit.ratelimit.average=100"
+      - "traefik.http.middlewares.api-ratelimit.ratelimit.burst=50"
+
+  db:
+      # Adjust the build context to your needs targetting the created Dockerfile
+      build:
+          context: ./redis/
+          dockerfile: Dockerfile
+      image: redis:7.2-alpine
+      restart: always
+      ports:
+          - 127.0.01:6379:6379
+      # Run the init script
+      command: sh -c "./init.sh"
+      # Run as privileged to allow the container to change the vm.overcommit_memory setting
+      privileged: true
+
   traefik:
     image: traefik:v2.3
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.myresolver.acme.email=robert@manifold.inc"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./letsencrypt:/letsencrypt"
+      - 80:80
+      - 443:443
     restart: always
+    volumes: 
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - $PWD/traefik.toml:/etc/traefik/traefik.toml
+      - traefik-public-certificates:/certificates
 
-  inference-service1:
+  text-generation-service:
     image: ghcr.io/huggingface/text-generation-inference:1.3
-    command: ["--model-id", "mlabonne/NeuralDaredevil-7B", "--max-input-length", "3072", "--max-total-tokens", "4096"]
+    command: --model-id mlabonne/NeuralDaredevil-7B --max-input-length 3072 --max-total-tokens 4096
+    volumes:
+      - ./models:/data
     ports:
-      - "8080:80"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.challenger.rule=Host(`challenger.sybil.com`)"
-      - "traefik.http.routers.challenger.entrypoints=websecure"
-      - "traefik.http.services.challenger.loadbalancer.server.port=443"
-      - "traefik.http.routers.challenger.tls.certresolver=myresolver"
+      - "127.0.0.1:8080:80"
     deploy:
       resources:
         reservations:
           devices:
-          - driver: nvidia
-            device_ids: ['0']
-            capabilities: [gpu]
+            - driver: nvidia
+              capabilities: [gpu]
     shm_size: '1g'
-    volumes:
-      - "./models:/data"
-
-  inference-service2:
-    image: ghcr.io/huggingface/text-generation-inference:1.3
-    command: ["--model-id", "mlabonne/NeuralDaredevil-7B", "--max-input-length", "3072", "--max-total-tokens", "4096"]
-    ports:
-      - "8081:80"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.challenger.rule=Host(`challenger.sybil.com`)"
-      - "traefik.http.services.challenger.loadbalancer.server.port=443"
-      - "traefik.http.routers.challenger.tls.certresolver=myresolver"
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            device_ids: ['1']
-            capabilities: [gpu]
-    volumes:
-      - "./models:/data"
 
 volumes:
   letsencrypt:
+  db:
+    driver: local
+
+networks:
+  traefik:
+    external: true
+  db:

@@ -8,6 +8,8 @@ test.py
 # C extensions
 *.so
 
+.env
+
 # Distribution / packaging
 .Python
 build/

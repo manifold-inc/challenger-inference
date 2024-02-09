@@ -1,0 +1,6 @@
+fastapi[all]
+sse_starlette
+aioredis
+huggingface-hub
+fastapi-limiter
+axiom-py
