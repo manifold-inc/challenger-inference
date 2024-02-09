@@ -29,7 +29,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.challenger.rule=Host(`challenger.sybil.com`)"
       - "traefik.http.routers.challenger.entrypoints=websecure"
-      - "traefik.http.services.challenger.loadbalancer.server.port=80"
+      - "traefik.http.services.challenger.loadbalancer.server.port=443"
       - "traefik.http.routers.challenger.tls.certresolver=myresolver"
     deploy:
       resources:
@@ -50,7 +50,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.challenger.rule=Host(`challenger.sybil.com`)"
-      - "traefik.http.services.challenger.loadbalancer.server.port=80"
+      - "traefik.http.services.challenger.loadbalancer.server.port=443"
       - "traefik.http.routers.challenger.tls.certresolver=myresolver"
     deploy:
       resources:
